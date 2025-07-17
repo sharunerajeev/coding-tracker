@@ -18,49 +18,46 @@ def create_log(date_str, output_dir):
         nbf.new_markdown_cell(
             """## ✅ Tasks Completed
 - [ ] Problem 1: <Name> ([Link](#))
-- [ ] Project Work: <Module or Task Name>
-- [ ] Tutorial Followed: <Link or Title>
 """
         ),
         nbf.new_markdown_cell(
-            """## 💡 Key Learnings
-- Bullet key points here.
-  - Use sub-bullets for code tricks or insights
-- Keep it short and skimmable
-"""
-        ),
-        nbf.new_markdown_cell(
-            """## 🧠 Challenges & Debugging
-- What did you struggle with?
-- How did you figure it out?
-"""
-        ),
-        nbf.new_markdown_cell(
-            """## 📚 Resources
-
-| Topic | Description | Link |
-|-------|-------------|------|
-| XOR Trick | Used in LC 136 | [LeetCode](https://leetcode.com/problems/single-number) |
+            """## 📈 Progress Tracker
+| Problem | Status | Date | Notes |
+|---------|--------|------|-------|
+| <Name>  | ⬜/✅   | <Date> | <Notes> |
 """
         ),
         nbf.new_markdown_cell(
             """## 🧪 Code Experiments
-<details>
-<summary>Click to expand</summary>
-
-```python
-# Sample Python code block
-def example():
-    pass
-```
-
-</details>
 """
         ),
         nbf.new_markdown_cell(
-            """## 🔁 To Revisit
-- [ ] Re-do LC 136 without hints
-- [ ] Debug JS async example again
+            """### Problem 1: <Name>
+<Problem description here>
+"""
+        ),
+        nbf.new_markdown_cell(
+            """#### Solution Walkthrough
+1. <Step 1>
+2. <Step 2>
+3. <Step 3>
+"""
+        ),
+        nbf.new_code_cell(
+            """# Paste your solution here
+def solution():
+    pass
+"""
+        ),
+        nbf.new_markdown_cell(
+            """## 🔄 Revision Log
+- <Date>: First attempt, reviewed solution and code.
+- [ ] Next revision: <Next Date> (Schedule a revisit for spaced repetition)
+"""
+        ),
+        nbf.new_markdown_cell(
+            """## 📝 Personal Notes
+- <Your notes here>
 """
         ),
     ]
