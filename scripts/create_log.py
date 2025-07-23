@@ -47,6 +47,9 @@ def create_log(date_str, output_dir):
             """# Paste your solution here
 def solution():
     pass
+    
+
+print(solution())
 """
         ),
         nbf.new_markdown_cell(
