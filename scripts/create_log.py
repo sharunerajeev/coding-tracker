@@ -3,69 +3,153 @@ from datetime import datetime
 import nbformat
 from nbformat import v4 as nbf
 import os
+import json
+
+try:
+    import yaml
+except ImportError:
+    yaml = None
 
 
-def create_log(date_str, output_dir):
-    title_cell = f"# 📅 Date: {date_str}"
+def prompt_problem():
+    print("Enter new problem details:")
+    name = input("Problem name: ").strip()
+    link = input("Problem link: ").strip()
+    description = input("Problem description: ").strip()
+    test_input = input("Test input (Python literal, e.g. 5 or [1,2,3]): ").strip()
+    try:
+        test_input_eval = eval(test_input)
+    except Exception:
+        test_input_eval = test_input
+    return {
+        "name": name or "<Name>",
+        "link": link or "#",
+        "description": description or "<Problem description here>",
+        "test_input": test_input_eval if test_input else "<test_input>",
+    }
 
-    template_cells = [
-        nbf.new_markdown_cell(title_cell),
+
+def add_problem_to_log(date_str, output_dir):
+    filename = f"{date_str}.ipynb"
+    output_path = os.path.join(output_dir, filename)
+    if not os.path.exists(output_path):
+        print(f"Log file {output_path} does not exist. Please create it first.")
+        return
+
+    nb = nbformat.read(output_path, as_version=4)
+    problem = prompt_problem()
+
+    # Find the last problem/code experiment cell to append after it, but before revision log/personal notes
+    insert_idx = len(nb.cells)
+    for i, cell in enumerate(nb.cells):
+        if cell.cell_type == "markdown" and (
+            cell.source.strip().startswith("## 🔄 Revision Log")
+            or cell.source.strip().startswith("## 📝 Personal Notes")
+        ):
+            insert_idx = i
+            break
+
+    # Append new problem markdown and code cell just before revision log/personal notes
+    nb.cells.insert(
+        insert_idx,
         nbf.new_markdown_cell(
-            """## 🔍 Focus Area
-- (e.g., Arrays, Sliding Window, Binary Search)
-"""
+            f"### Problem: {problem['name']}\n{problem['description']}\n"
         ),
-        nbf.new_markdown_cell(
-            """## ✅ Tasks Completed
-- [ ] Problem 1: <Name> ([Link](#))
-"""
-        ),
-        nbf.new_markdown_cell(
-            """## 📈 Progress Tracker
-| Problem | Status | Date | Notes |
-|---------|--------|------|-------|
-| <Name>  | ⬜/✅   | <Date> | <Notes> |
-"""
-        ),
-        nbf.new_markdown_cell(
-            """## 🧪 Code Experiments
-"""
-        ),
-        nbf.new_markdown_cell(
-            """### Problem 1: <Name>
-<Problem description here>
-"""
-        ),
-        nbf.new_markdown_cell(
-            """#### Solution Walkthrough
-1. <Step 1>
-2. <Step 2>
-3. <Step 3>
-"""
-        ),
+    )
+    nb.cells.insert(
+        insert_idx + 1,
         nbf.new_code_cell(
-            """# Paste your solution here
-def solution():
-    pass
-    
+            "# Paste your solution here\nclass Solution:\n"
+            "    # @param A : integer\n"
+            "    def solve(self, A):\n"
+            "        pass\n\n"
+            f"Solution().solve({repr(problem['test_input'])})"
+        ),
+    )
 
-print(solution())
-"""
-        ),
-        nbf.new_markdown_cell(
-            """## 🔄 Revision Log
-- <Date>: First attempt, reviewed solution and code.
-- [ ] Next revision: <Next Date> (Schedule a revisit for spaced repetition)
-"""
-        ),
-        nbf.new_markdown_cell(
-            """## 📝 Personal Notes
-- <Your notes here>
-"""
-        ),
+    nbformat.write(nb, output_path)
+    print(f"✅ Problem added to {output_path}")
+
+
+def create_log(
+    date_str,
+    output_dir,
+    num_problems=4,
+    add_revision_log=True,
+    add_personal_notes=True,
+):
+    # Title cell
+    title_cell = nbf.new_markdown_cell(f"# 📅 Date: {date_str}")
+
+    # Focus area cell
+    focus_area_cell = nbf.new_markdown_cell(
+        "## 🔍 Focus Area\n- <e.g., Recursion, Arrays, Sliding Window>\n"
+    )
+
+    # Use placeholders
+    problems = []
+    for i in range(1, num_problems + 1):
+        problems.append(
+            {
+                "name": "<Name>",
+                "link": "#",
+                "description": "<Problem description here>",
+                "test_input": "<test_input>",
+            }
+        )
+
+    # Tasks completed cell
+    tasks_completed_lines = ["## ✅ Tasks Completed"]
+    for idx, prob in enumerate(problems, 1):
+        tasks_completed_lines.append(
+            f"- Problem {idx}: {prob['name']} ([Link]({prob['link']}))"
+        )
+    tasks_completed_cell = nbf.new_markdown_cell("\n".join(tasks_completed_lines))
+
+    # Code experiments section header
+    code_experiments_cell = nbf.new_markdown_cell("## 🧪 Code Experiments\n")
+
+    # Problem cells
+    problem_cells = []
+    for idx, prob in enumerate(problems, 1):
+        problem_cells.append(
+            nbf.new_markdown_cell(
+                f"### Problem {idx}: {prob['name']}\n{prob['description']}\n"
+            )
+        )
+        test_input = prob.get("test_input", "<test_input>")
+        problem_cells.append(
+            nbf.new_code_cell(
+                "# Paste your solution here\nclass Solution:\n"
+                "    # @param A : integer\n"
+                "    def solve(self, A):\n"
+                "        pass\n\n"
+                f"Solution().solve({test_input})"
+            )
+        )
+
+    # Optionally, add revision log and personal notes
+    cells = [
+        title_cell,
+        focus_area_cell,
+        tasks_completed_cell,
+        code_experiments_cell,
+        *problem_cells,
     ]
+    if add_revision_log:
+        cells.append(
+            nbf.new_markdown_cell(
+                "## 🔄 Revision Log\n"
+                "- <Date>: First attempt, reviewed solution and code.\n"
+                "- [ ] Next revision: <Next Date> (Schedule a revisit for spaced repetition)\n"
+            )
+        )
+    if add_personal_notes:
+        cells.append(
+            nbf.new_markdown_cell("## 📝 Personal Notes\n- <Your notes here>\n")
+        )
 
-    nb = nbf.new_notebook(cells=template_cells)
+    nb = nbf.new_notebook(cells=cells)
 
     filename = f"{date_str}.ipynb"
     output_path = os.path.join(output_dir, filename)
@@ -78,17 +162,56 @@ print(solution())
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
-        description="Generate a new daily coding log notebook."
+        description="Generate a new daily coding log notebook or add a problem interactively."
     )
     parser.add_argument(
+        "-d",
         "--date",
         type=str,
         default=datetime.now().strftime("%d-%m-%Y"),
         help="Date for the log (format: DD-MM-YYYY)",
     )
     parser.add_argument(
-        "--output", type=str, default=".", help="Output directory for the notebook"
+        "-o",
+        "--output",
+        type=str,
+        default=".",
+        help="Output directory for the notebook",
+    )
+    parser.add_argument(
+        "-n",
+        "--num-problems",
+        type=int,
+        default=4,
+        help="Number of problems to include",
+    )
+    parser.add_argument(
+        "--no-revision-log",
+        "-r",
+        action="store_true",
+        help="Do not include revision log section",
+    )
+    parser.add_argument(
+        "--no-personal-notes",
+        "-t",
+        action="store_true",
+        help="Do not include personal notes section",
+    )
+    parser.add_argument(
+        "-a",
+        "--add-problem",
+        action="store_true",
+        help="Interactively add a new problem to the log for the given date",
     )
 
     args = parser.parse_args()
-    create_log(args.date, args.output)
+    if args.add_problem:
+        add_problem_to_log(args.date, args.output)
+    else:
+        create_log(
+            args.date,
+            args.output,
+            num_problems=args.num_problems,
+            add_revision_log=not args.no_revision_log,
+            add_personal_notes=not args.no_personal_notes,
+        )
