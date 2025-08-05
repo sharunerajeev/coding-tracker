@@ -39,7 +39,55 @@ def add_problem_to_log(date_str, output_dir):
     nb = nbformat.read(output_path, as_version=4)
     problem = prompt_problem()
 
-    # Find the last problem/code experiment cell to append after it, but before revision log/personal notes
+    # Count existing problems to determine next problem number
+    problem_number = 1
+    for cell in nb.cells:
+        if (
+            cell.cell_type == "markdown"
+            and cell.source.strip().startswith("### Problem")
+        ):
+            # Accept both "### Problem N:" and "### Problem: "
+            if cell.source.strip().startswith("### Problem "):
+                try:
+                    after = cell.source.strip()[len("### Problem "):]
+                    if after[0].isdigit():
+                        num = ""
+                        for c in after:
+                            if c.isdigit():
+                                num += c
+                            else:
+                                break
+                        if num:
+                            problem_number = max(problem_number, int(num) + 1)
+                except Exception:
+                    continue
+            elif cell.source.strip().startswith("### Problem:"):
+                problem_number += 1
+
+    # Update the Tasks Overview section
+    for cell in nb.cells:
+        if (
+            cell.cell_type == "markdown"
+            and cell.source.strip().startswith("## ✅ Tasks Overview")
+        ):
+            # Find the last "- Problem N:" line and append the new one after it
+            lines = cell.source.splitlines()
+            # Find the last problem line index
+            last_idx = 0
+            for idx, line in enumerate(lines):
+                if line.strip().startswith("- Problem "):
+                    last_idx = idx
+            # Insert new problem line after the last problem
+            new_problem_line = f"- Problem {problem_number}: {problem['name']} ([Link]({problem['link']}))"
+            # Insert before any trailing blank lines
+            insert_at = last_idx + 1
+            while insert_at < len(lines) and lines[insert_at].strip() == "":
+                insert_at += 1
+            lines.insert(insert_at, new_problem_line)
+            cell.source = "\n".join(lines)
+            break
+
+    # Find the insertion index (before revision log/personal notes)
     insert_idx = len(nb.cells)
     for i, cell in enumerate(nb.cells):
         if cell.cell_type == "markdown" and (
@@ -49,11 +97,11 @@ def add_problem_to_log(date_str, output_dir):
             insert_idx = i
             break
 
-    # Append new problem markdown and code cell just before revision log/personal notes
+    # Use the correct heading format for the new problem
     nb.cells.insert(
         insert_idx,
         nbf.new_markdown_cell(
-            f"### Problem: {problem['name']}\n{problem['description']}\n"
+            f"### Problem {problem_number}: {problem['name']}\n{problem['description']}\n"
         ),
     )
     nb.cells.insert(
@@ -68,7 +116,7 @@ def add_problem_to_log(date_str, output_dir):
     )
 
     nbformat.write(nb, output_path)
-    print(f"✅ Problem added to {output_path}")
+    print(f"✅ Problem {problem_number} added to {output_path}")
 
 
 def create_log(
