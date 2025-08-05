@@ -1,46 +1,28 @@
 {
-    "version": "2.0.0",
-    "tasks": [
-        {
-            "label": "🧪 Create Daily Log",
-            "type": "shell",
-            "command": "python",
-            "args": [
-                "scripts/create_log.py",
-                "--output",
-                "logs"
-                // Example: Uncomment and edit the following lines to use new CLI options:
-                // ,"--num-problems", "4"
-                // ,"--problems-file", "problems.yaml"
-                // ,"--no-revision-log"
-                // ,"--no-personal-notes"
-                // ,"--date", "05-08-2025"
-            ],
-            "problemMatcher": [],
-            "group": {
-                "kind": "build",
-                "isDefault": true
-            },
-            "presentation": {
-                "echo": true,
-                "reveal": "always",
-                "panel": "shared"
-            }
-        },
-        {
-            "label": "🛈 Show Log Script Help",
-            "type": "shell",
-            "command": "python",
-            "args": [
-                "scripts/create_log.py",
-                "--help"
-            ],
-            "problemMatcher": [],
-            "presentation": {
-                "echo": true,
-                "reveal": "always",
-                "panel": "shared"
-            }
-        }
-    ]
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "🧪 Add Problem to Daily Log (Interactive)",
+      "type": "shell",
+      "command": "python",
+      "args": [
+        "scripts/create_log.py",
+        "--output",
+        "logs",
+        "--add-problem"
+        // Example: add other options if needed, e.g.:
+        // ,"--date", "05-08-2025"
+      ],
+      "problemMatcher": [],
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "panel": "shared"
+      }
+    }
+  ]
 }
