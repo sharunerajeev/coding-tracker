@@ -68,7 +68,7 @@ def add_problem_to_log(date_str, output_dir):
     for cell in nb.cells:
         if (
             cell.cell_type == "markdown"
-            and cell.source.strip().startswith("## ✅ Tasks Overview")
+            and cell.source.strip().startswith("## ✅ Tasks Completed")
         ):
             # Find the last "- Problem N:" line and append the new one after it
             lines = cell.source.splitlines()
